@@ -1,9 +1,9 @@
 package app
 
 import (
-	"BannerService/internal/repository"
-	"BannerService/internal/service"
-	"BannerService/internal/transport"
+	"ScriptService/internal/repository"
+	"ScriptService/internal/service"
+	"ScriptService/internal/transport"
 	"github.com/spf13/viper"
 	"log"
 	"net/http"

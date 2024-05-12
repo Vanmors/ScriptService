@@ -1,7 +1,7 @@
 package main
 
 import (
-	"BannerService/internal/app"
+	"ScriptService/internal/app"
 	"log"
 )
 

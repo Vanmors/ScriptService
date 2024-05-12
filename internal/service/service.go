@@ -1,8 +1,8 @@
 package service
 
 import (
-	"BannerService/internal/model"
-	"BannerService/internal/repository"
+	"ScriptService/internal/model"
+	"ScriptService/internal/repository"
 )
 
 type Command interface {

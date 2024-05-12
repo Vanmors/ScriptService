@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"BannerService/internal/model"
-	"BannerService/pkg/store"
+	"ScriptService/internal/model"
+	"ScriptService/pkg/store"
 )
 
 type Repositories struct {

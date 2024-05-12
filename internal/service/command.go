@@ -1,8 +1,8 @@
 package service
 
 import (
-	"BannerService/internal/model"
-	"BannerService/internal/repository"
+	"ScriptService/internal/model"
+	"ScriptService/internal/repository"
 	"fmt"
 	"log"
 	"os/exec"
@@ -89,6 +89,7 @@ func (cs *CommandService) ExecuteCommandAsync(cmd model.Command) {
 				cs.Repos.Command.UpdateCommand(cmdId, output)
 				log.Println("updated", cmdId)
 				outChan <- string(buf[:n])
+
 			}
 		}()
 

@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"BannerService/internal/model"
+	"ScriptService/internal/model"
 	"database/sql"
 	"fmt"
 )

@@ -1,8 +1,8 @@
 package transport
 
 import (
-	"BannerService/internal/model"
-	"BannerService/internal/service"
+	"ScriptService/internal/model"
+	"ScriptService/internal/service"
 	"encoding/json"
 	"net/http"
 )

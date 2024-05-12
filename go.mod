@@ -1,4 +1,4 @@
-module BannerService
+module ScriptService
 
 go 1.21
 
