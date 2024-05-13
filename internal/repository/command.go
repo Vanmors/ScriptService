@@ -50,3 +50,20 @@ func (cr *CommandRepository) GetAllCommand() ([]model.Command, error) {
 	}
 	return commands, nil
 }
+
+func (cr *CommandRepository) DeleteCommand(cmdId int) error {
+	_, err := cr.conn.Exec("DELETE FROM commands WHERE id=$1", cmdId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (cr *CommandRepository) GetCommand(cmdId int) (model.Command, error) {
+	var command model.Command
+	err := cr.conn.QueryRow("SELECT * FROM commands WHERE id=$1", cmdId).Scan(&command.ID, &command.Command, &command.Result)
+	if err != nil {
+		return model.Command{}, err
+	}
+	return command, nil
+}

@@ -36,6 +36,7 @@ func Run() error {
 
 	http.HandleFunc("/command", handler.CreateCommand)
 	http.HandleFunc("/commands", handler.GetAllCommands)
+	http.HandleFunc("/command/", handler.GetCommandById)
 
 	port = os.Getenv("PORT")
 	if port == "" {

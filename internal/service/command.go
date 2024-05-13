@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
-	"sync"
 )
 
 type CommandService struct {
@@ -18,13 +17,6 @@ func NewCommandService(repos *repository.Repositories) *CommandService {
 }
 
 func (cs *CommandService) CreateCommand(cmd model.Command) (model.Command, error) {
-	//result, err := cs.executeCommand(cmd.Command)
-	//if err != nil {
-	//	return model.Command{}, err
-	//}
-
-	//cmd.Result = result
-
 	cmd.Result = ""
 	id, err := cs.Repos.Command.CreateCommand(cmd)
 	cmd.ID = id
@@ -36,85 +28,39 @@ func (cs *CommandService) CreateCommand(cmd model.Command) (model.Command, error
 	return cmd, nil
 }
 
-func (cs *CommandService) executeCommand(cmdStr string) (string, error) {
-	cmd := exec.Command("bash", "-c", cmdStr)
-	output, err := cmd.Output()
+func (cs *CommandService) ExecuteCommand(cmd model.Command) (model.Command, error) {
+
+	command := exec.Command("bash", "-c", cmd.Command)
+	command.Stderr = nil
+
+	stdout, err := command.StdoutPipe()
 	if err != nil {
-		return "", err
+		log.Println("Error creating stdout pipe:", err)
+		return model.Command{}, err
 	}
-	return string(output), nil
-}
 
-func (cs *CommandService) ExecuteCommandAsync(cmd model.Command) {
-	var wg sync.WaitGroup
-	wg.Add(1)
+	if err := command.Start(); err != nil {
+		log.Println("Error starting command:", err)
+		return model.Command{}, err
+	}
 
-	go func() {
-		defer wg.Done()
-
-		outChan := make(chan string)
-		errChan := make(chan error)
-
-		cmdId := cmd.ID
-		cmdStr := cmd.Command
-		cmdResult := ""
-
-		cmd := exec.Command("bash", "-c", cmdStr)
-		cmd.Stderr = nil
-
-		stdout, err := cmd.StdoutPipe()
+	buf := make([]byte, 1024)
+	for {
+		n, err := stdout.Read(buf)
 		if err != nil {
-			log.Println("Error creating stdout pipe:", err)
-			errChan <- err
-			return
+			break
+		}
+		fmt.Println(string(buf[:n]))
+		cmd.Result += string(buf[:n])
+
+		err = cs.Repos.Command.UpdateCommand(cmd.ID, cmd.Result)
+		if err != nil {
+			return model.Command{}, err
 		}
 
-		if err := cmd.Start(); err != nil {
-			log.Println("Error starting command:", err)
-			errChan <- err
-			return
-		}
-
-		go func() {
-			buf := make([]byte, 1024)
-			output := ""
-			for {
-				n, err := stdout.Read(buf)
-				if err != nil {
-					close(outChan)
-					return
-				}
-				fmt.Println(string(buf[:n]))
-				output += string(buf[:n])
-				cs.Repos.Command.UpdateCommand(cmdId, output)
-				log.Println("updated", cmdId)
-				outChan <- string(buf[:n])
-
-			}
-		}()
-
-		for {
-			select {
-			case output, ok := <-outChan:
-				if !ok {
-					//cmd.Wait()
-					cmdResult += "Command execution completed."
-					//cs.Repos.Command.UpdateCommand(1, cmd.String())
-					//wg.Done()
-					return
-				}
-				cmdResult += output
-				//cs.Repos.Command.UpdateCommand(1, cmd.String())
-			case err := <-errChan:
-				cmdResult += fmt.Sprintf("Error: %v", err)
-				//cs.Repos.Command.UpdateCommand(1, cmd.String())
-				//wg.Done()
-				return
-			}
-		}
-	}()
-
-	wg.Wait()
+		log.Println("updated", cmd.ID)
+	}
+	return cmd, err
 }
 
 func (cs *CommandService) GetAllCommands() ([]string, error) {
@@ -128,4 +74,12 @@ func (cs *CommandService) GetAllCommands() ([]string, error) {
 	}
 
 	return nameCommands, nil
+}
+
+func (cs *CommandService) GetCommand(cmdId int) (string, error) {
+	command, err := cs.Repos.Command.GetCommand(cmdId)
+	if err != nil {
+		return "", err
+	}
+	return command.Command, nil
 }

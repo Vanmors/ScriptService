@@ -7,9 +7,9 @@ import (
 
 type Command interface {
 	CreateCommand(cmd model.Command) (model.Command, error)
-	executeCommand(cmdStr string) (string, error)
 	GetAllCommands() ([]string, error)
-	ExecuteCommandAsync(cmd model.Command)
+	ExecuteCommand(cmd model.Command) (model.Command, error)
+	GetCommand(cmdId int) (string, error)
 }
 
 type Services struct {
