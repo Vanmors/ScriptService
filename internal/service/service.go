@@ -3,18 +3,21 @@ package service
 import (
 	"ScriptService/internal/model"
 	"ScriptService/internal/repository"
+	"sync"
 )
 
-type Command interface {
+//go:generate mockgen -source=service.go -destination=mock/mock.go
+
+type CommandServ interface {
 	CreateCommand(cmd model.Command) (model.Command, error)
 	GetAllCommands() ([]string, error)
 	ExecuteCommand(contextCommand model.ContextCommand, cmd model.Command) (model.Command, error)
 	GetCommand(cmdId int) (string, error)
-	CancelCommand(contextCommand model.ContextCommand, cmdId int) error
+	CancelCommand(contextMap *sync.Map, cmdId int) error
 }
 
 type Services struct {
-	Command Command
+	Command CommandServ
 }
 
 func NewServices(Repos *repository.Repositories) (*Services, error) {

@@ -71,6 +71,10 @@ func (h *Handler) GetAllCommands(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetCommandById(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 	parts := strings.Split(r.URL.Path, "/")
 	commandID, err := strconv.Atoi(parts[len(parts)-1])
 	if err != nil {
@@ -98,16 +102,10 @@ func (h *Handler) CancelCommand(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	val, ok := ContextMap.Load(commandID)
-	if ok {
-		ctx, ok := val.(model.ContextCommand)
-		if ok {
-			err := h.services.Command.CancelCommand(ctx, commandID)
-			if err != nil {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
-		}
+	err = h.services.Command.CancelCommand(&ContextMap, commandID)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 }

@@ -5,9 +5,7 @@ import (
 	"ScriptService/pkg/store"
 )
 
-type Repositories struct {
-	Command Command
-}
+//go:generate mockgen -source=repository.go -destination=mock/mock.go
 
 type Command interface {
 	CreateCommand(cmd model.Command) (int, error)
@@ -15,6 +13,10 @@ type Command interface {
 	UpdateCommand(cmdId int, cmdResult string) error
 	DeleteCommand(cmdId int) error
 	GetCommand(cmdId int) (model.Command, error)
+}
+
+type Repositories struct {
+	Command Command
 }
 
 func NewRepositories(dbname, username, password, host, port string) (*Repositories, error) {

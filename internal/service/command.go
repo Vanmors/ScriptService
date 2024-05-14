@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"sync"
 )
 
 type CommandService struct {
@@ -21,7 +22,6 @@ func (cs *CommandService) CreateCommand(cmd model.Command) (model.Command, error
 	id, err := cs.Repos.Command.CreateCommand(cmd)
 	cmd.ID = id
 	if err != nil {
-		log.Fatal(err)
 		return model.Command{}, err
 	}
 
@@ -88,11 +88,17 @@ func (cs *CommandService) GetCommand(cmdId int) (string, error) {
 	return command.Command, nil
 }
 
-func (cs *CommandService) CancelCommand(contextCommand model.ContextCommand, cmdId int) error {
-	contextCommand.Cancel()
-	err := cs.Repos.Command.DeleteCommand(cmdId)
-	if err != nil {
-		return err
+func (cs *CommandService) CancelCommand(contextMap *sync.Map, cmdId int) error {
+	val, ok := contextMap.LoadAndDelete(cmdId)
+	if ok {
+		ctx, ok := val.(model.ContextCommand)
+		if ok {
+			ctx.Cancel()
+			err := cs.Repos.Command.DeleteCommand(cmdId)
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }
