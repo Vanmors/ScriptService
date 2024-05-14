@@ -174,7 +174,7 @@ func TestHandler_CancelCommand(t *testing.T) {
 			rr := httptest.NewRecorder()
 
 			reqBody := bytes.NewBufferString(testCase.inputBody)
-			req := httptest.NewRequest(http.MethodGet, "/cancelCommand/1", reqBody)
+			req := httptest.NewRequest(http.MethodDelete, "/cancelCommand/1", reqBody)
 
 			handler.CancelCommand(rr, req)
 
