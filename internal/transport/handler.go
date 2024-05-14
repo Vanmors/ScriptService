@@ -95,6 +95,10 @@ func (h *Handler) GetCommandById(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CancelCommand(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 	parts := strings.Split(r.URL.Path, "/")
 	commandID, err := strconv.Atoi(parts[len(parts)-1])
 	if err != nil {

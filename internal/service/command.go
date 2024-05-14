@@ -3,7 +3,6 @@ package service
 import (
 	"ScriptService/internal/model"
 	"ScriptService/internal/repository"
-	"fmt"
 	"log"
 	"os/exec"
 	"sync"
@@ -49,7 +48,6 @@ func (cs *CommandService) ExecuteCommand(contextCommand model.ContextCommand, cm
 		if err != nil {
 			break
 		}
-		fmt.Println(string(buf[:n]))
 		cmd.Result += string(buf[:n])
 
 		select {
@@ -60,8 +58,6 @@ func (cs *CommandService) ExecuteCommand(contextCommand model.ContextCommand, cm
 			if err != nil {
 				return model.Command{}, err
 			}
-
-			log.Println("updated", cmd.ID)
 		}
 	}
 	return cmd, err

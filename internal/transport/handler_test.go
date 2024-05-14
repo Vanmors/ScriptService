@@ -1,9 +1,11 @@
 package transport
 
 import (
+	"ScriptService/internal/model"
 	"ScriptService/internal/service"
 	mock_service "ScriptService/internal/service/mock"
 	"bytes"
+	"context"
 	"errors"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
@@ -11,6 +13,7 @@ import (
 	"net/http/httptest"
 	"sync"
 	"testing"
+	"time"
 )
 
 func TestHandler_GetCommandById(t *testing.T) {
@@ -181,76 +184,70 @@ func TestHandler_CancelCommand(t *testing.T) {
 	}
 }
 
-//func TestHandler_CreateCommand(t *testing.T) {
-//	type mockBehavior func(s *mock_service.MockCommand, command model.Command, contextCommand model.ContextCommand)
-//
-//	testTable := []struct {
-//		name                string
-//		inputBody           string
-//		inputCommand        model.Command
-//		contextCommand      model.ContextCommand
-//		mockBehavior        mockBehavior
-//		expectedStatusCode  int
-//		expectedRequestBody string
-//	}{
-//		{
-//			name:           "OK",
-//			inputBody:      `{"command": "echo 'Hello, world!' && sleep 10 && echo 'Goodbye, world!'"}`,
-//			inputCommand:   model.Command{Command: "echo 'Hello, world!' && sleep 10 && echo 'Goodbye, world!'"},
-//			contextCommand: model.ContextCommand{},
-//			mockBehavior: func(s *mock_service.MockCommand, command model.Command, contextCommand model.ContextCommand) {
-//				s.EXPECT().CreateCommand(command).Return(model.Command{ID: 1,
-//					Command: "echo 'Hello, world!' && sleep 10 && echo 'Goodbye, world!'",
-//					Result:  ""}, nil)
-//				s.EXPECT().ExecuteCommand(contextCommand, command).Return(model.Command{ID: 1,
-//					Command: "echo 'Hello, world!' && sleep 10 && echo 'Goodbye, world!'",
-//					Result:  ""}, nil)
-//			},
-//			expectedStatusCode:  http.StatusCreated,
-//			expectedRequestBody: "1\n",
-//		},
-//		{
-//			name:           "Element does not exist",
-//			inputBody:      `{"command": "echo 'Hello, world!' && sleep 10 && echo 'Goodbye, world!'"}`,
-//			contextCommand: model.ContextCommand{},
-//			inputCommand:   model.Command{Command: "echo 'Hello, world!' && sleep 10 && echo 'Goodbye, world!'"},
-//			mockBehavior: func(s *mock_service.MockCommand, command model.Command, contextCommand model.ContextCommand) {
-//				s.EXPECT().CreateCommand(command).Return(
-//					model.Command{ID: 1,
-//						Command: "echo 'Hello, world!' && sleep 10 && echo 'Goodbye, world!'",
-//						Result:  ""},
-//					errors.New("element"))
-//				s.EXPECT().ExecuteCommand(contextCommand, command).Return(model.Command{ID: 1,
-//					Command: "echo 'Hello, world!' && sleep 10 && echo 'Goodbye, world!'",
-//					Result:  ""}, nil)
-//			},
-//			expectedStatusCode:  http.StatusBadRequest,
-//			expectedRequestBody: "",
-//		},
-//	}
-//
-//	for _, testCase := range testTable {
-//		t.Run(testCase.name, func(t *testing.T) {
-//			c := gomock.NewController(t)
-//			defer c.Finish()
-//
-//			command := mock_service.NewMockCommand(c)
-//			testCase.mockBehavior(command, testCase.inputCommand, testCase.contextCommand)
-//
-//			services := &service.Services{Command: command}
-//			handler := NewHandler(services)
-//
-//			rr := httptest.NewRecorder()
-//
-//			// Создание фейкового http.Request с телом запроса
-//			reqBody := bytes.NewBufferString(testCase.inputBody)
-//			req := httptest.NewRequest(http.MethodPost, "/command", reqBody)
-//
-//			// Вызов обработчика с фейковыми объектами http.ResponseWriter и http.Request
-//			handler.CreateCommand(rr, req)
-//
-//			require.Equal(t, testCase.expectedStatusCode, rr.Code)
-//			require.Equal(t, testCase.expectedRequestBody, rr.Body.String())
-//		})
-//	}
-//}
+func TestHandler_CreateCommand(t *testing.T) {
+	type mockBehavior func(s *mock_service.MockCommand, command model.Command, contextCommand model.ContextCommand)
+
+	testTable := []struct {
+		name                string
+		inputBody           string
+		inputCommand        model.Command
+		mockBehavior        mockBehavior
+		expectedStatusCode  int
+		expectedRequestBody string
+	}{
+		{
+			name:         "OK",
+			inputBody:    `{"command": "echo 'Hello, world!' && sleep 10 && echo 'Goodbye, world!'"}`,
+			inputCommand: model.Command{Command: "echo 'Hello, world!' && sleep 10 && echo 'Goodbye, world!'"},
+			mockBehavior: func(s *mock_service.MockCommand, command model.Command, contextCommand model.ContextCommand) {
+				s.EXPECT().CreateCommand(command).Return(model.Command{ID: 1,
+					Command: "echo 'Hello, world!' && sleep 10 && echo 'Goodbye, world!'",
+					Result:  ""}, nil)
+				s.EXPECT().ExecuteCommand(gomock.Any(), gomock.Any()).Return(model.Command{}, nil)
+			},
+			expectedStatusCode:  http.StatusCreated,
+			expectedRequestBody: "1\n",
+		},
+		{
+			name:         "Element does not exist",
+			inputBody:    `{"command": "echo 'Hello, world!' && sleep 10 && echo 'Goodbye, world!'"}`,
+			inputCommand: model.Command{Command: "echo 'Hello, world!' && sleep 10 && echo 'Goodbye, world!'"},
+			mockBehavior: func(s *mock_service.MockCommand, command model.Command, contextCommand model.ContextCommand) {
+				s.EXPECT().CreateCommand(command).Return(
+					model.Command{ID: 1,
+						Command: "echo 'Hello, world!' && sleep 10 && echo 'Goodbye, world!'",
+						Result:  ""},
+					errors.New("element"))
+				s.EXPECT().ExecuteCommand(gomock.Any(), gomock.Any()).Return(model.Command{}, nil)
+			},
+			expectedStatusCode:  http.StatusBadRequest,
+			expectedRequestBody: "",
+		},
+	}
+
+	for _, testCase := range testTable {
+		t.Run(testCase.name, func(t *testing.T) {
+			c := gomock.NewController(t)
+			defer c.Finish()
+
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+
+			command := mock_service.NewMockCommand(c)
+			testCase.mockBehavior(command, testCase.inputCommand, model.ContextCommand{Ctx: ctx, Cancel: cancel})
+
+			services := &service.Services{Command: command}
+			handler := NewHandler(services)
+
+			rr := httptest.NewRecorder()
+
+			reqBody := bytes.NewBufferString(testCase.inputBody)
+			req := httptest.NewRequest(http.MethodPost, "/command", reqBody)
+
+			handler.CreateCommand(rr, req)
+			time.Sleep(1 * time.Second)
+			require.Equal(t, testCase.expectedStatusCode, rr.Code)
+			require.Equal(t, testCase.expectedRequestBody, rr.Body.String())
+		})
+	}
+}

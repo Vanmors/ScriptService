@@ -3,7 +3,6 @@ package repository
 import (
 	"ScriptService/internal/model"
 	"database/sql"
-	"fmt"
 )
 
 type CommandRepository struct {
@@ -21,7 +20,6 @@ func (cr *CommandRepository) CreateCommand(cmd model.Command) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	fmt.Println(id)
 	return id, nil
 }
 
