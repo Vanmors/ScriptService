@@ -7,7 +7,6 @@ import (
 )
 
 func NewClient(dbname, username, password, host, port string) (*sql.DB, error) {
-	//connStr := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", username, password, dbname)
 	url := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=disable",
 		username,
 		password,
