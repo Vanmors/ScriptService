@@ -94,15 +94,15 @@ func (mr *MockCommandMockRecorder) GetCommand(cmdId interface{}) *gomock.Call {
 }
 
 // UpdateCommand mocks base method.
-func (m *MockCommand) UpdateCommand(cmdId int, cmdResult string) error {
+func (m *MockCommand) UpdateCommand(cmdId int, cmdResult, cmdStatus string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateCommand", cmdId, cmdResult)
+	ret := m.ctrl.Call(m, "UpdateCommand", cmdId, cmdResult, cmdStatus)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateCommand indicates an expected call of UpdateCommand.
-func (mr *MockCommandMockRecorder) UpdateCommand(cmdId, cmdResult interface{}) *gomock.Call {
+func (mr *MockCommandMockRecorder) UpdateCommand(cmdId, cmdResult, cmdStatus interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCommand", reflect.TypeOf((*MockCommand)(nil).UpdateCommand), cmdId, cmdResult)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCommand", reflect.TypeOf((*MockCommand)(nil).UpdateCommand), cmdId, cmdResult, cmdStatus)
 }

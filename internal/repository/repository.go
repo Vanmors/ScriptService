@@ -10,7 +10,7 @@ import (
 type Command interface {
 	CreateCommand(cmd model.Command) (int, error)
 	GetAllCommand() ([]model.Command, error)
-	UpdateCommand(cmdId int, cmdResult string) error
+	UpdateCommand(cmdId int, cmdResult string, cmdStatus string) error
 	DeleteCommand(cmdId int) error
 	GetCommand(cmdId int) (model.Command, error)
 }

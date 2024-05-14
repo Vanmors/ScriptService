@@ -8,16 +8,16 @@ import (
 
 //go:generate mockgen -source=service.go -destination=mock/mock.go
 
-type CommandServ interface {
+type Command interface {
 	CreateCommand(cmd model.Command) (model.Command, error)
 	GetAllCommands() ([]string, error)
 	ExecuteCommand(contextCommand model.ContextCommand, cmd model.Command) (model.Command, error)
-	GetCommand(cmdId int) (string, error)
+	GetCommand(cmdId int) (model.Command, error)
 	CancelCommand(contextMap *sync.Map, cmdId int) error
 }
 
 type Services struct {
-	Command CommandServ
+	Command Command
 }
 
 func NewServices(Repos *repository.Repositories) (*Services, error) {

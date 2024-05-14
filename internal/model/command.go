@@ -4,4 +4,5 @@ type Command struct {
 	ID      int    `json:"id"`
 	Command string `json:"command"`
 	Result  string `json:"result"`
+	Status  string `json:"status"`
 }

@@ -18,6 +18,7 @@ func NewCommandService(repos *repository.Repositories) *CommandService {
 
 func (cs *CommandService) CreateCommand(cmd model.Command) (model.Command, error) {
 	cmd.Result = ""
+	cmd.Status = "In progress"
 	id, err := cs.Repos.Command.CreateCommand(cmd)
 	cmd.ID = id
 	if err != nil {
@@ -54,13 +55,17 @@ func (cs *CommandService) ExecuteCommand(contextCommand model.ContextCommand, cm
 		case <-contextCommand.Ctx.Done():
 			return model.Command{}, err
 		default:
-			err = cs.Repos.Command.UpdateCommand(cmd.ID, cmd.Result)
+			err = cs.Repos.Command.UpdateCommand(cmd.ID, cmd.Result, "In progress")
 			if err != nil {
 				return model.Command{}, err
 			}
 		}
 	}
-	return cmd, err
+	err = cs.Repos.Command.UpdateCommand(cmd.ID, cmd.Result, "Done")
+	if err != nil {
+		return model.Command{}, err
+	}
+	return cmd, nil
 }
 
 func (cs *CommandService) GetAllCommands() ([]string, error) {
@@ -76,12 +81,12 @@ func (cs *CommandService) GetAllCommands() ([]string, error) {
 	return nameCommands, nil
 }
 
-func (cs *CommandService) GetCommand(cmdId int) (string, error) {
+func (cs *CommandService) GetCommand(cmdId int) (model.Command, error) {
 	command, err := cs.Repos.Command.GetCommand(cmdId)
 	if err != nil {
-		return "", err
+		return model.Command{}, err
 	}
-	return command.Command, nil
+	return command, nil
 }
 
 func (cs *CommandService) CancelCommand(contextMap *sync.Map, cmdId int) error {

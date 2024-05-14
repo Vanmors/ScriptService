@@ -32,17 +32,17 @@ func TestHandler_GetCommandById(t *testing.T) {
 			inputBody: `{}`,
 			inputId:   1,
 			mockBehavior: func(s *mock_service.MockCommand, commandId int) {
-				s.EXPECT().GetCommand(commandId).Return("commandName", nil)
+				s.EXPECT().GetCommand(commandId).Return(model.Command{ID: 1, Command: "echo 'Hello, world!'", Result: "Hello, world!", Status: "Done"}, nil)
 			},
 			expectedStatusCode:  http.StatusOK,
-			expectedRequestBody: "\"commandName\"\n",
+			expectedRequestBody: "{\"id\":1,\"command\":\"echo 'Hello, world!'\",\"result\":\"Hello, world!\",\"status\":\"Done\"}\n",
 		},
 		{
 			name:      "Element does not exist",
 			inputBody: `{}`,
 			inputId:   1,
 			mockBehavior: func(s *mock_service.MockCommand, commandId int) {
-				s.EXPECT().GetCommand(commandId).Return("", errors.New("element does not exist"))
+				s.EXPECT().GetCommand(commandId).Return(model.Command{}, errors.New("element does not exist"))
 			},
 			expectedStatusCode:  http.StatusBadRequest,
 			expectedRequestBody: "",
@@ -202,7 +202,8 @@ func TestHandler_CreateCommand(t *testing.T) {
 			mockBehavior: func(s *mock_service.MockCommand, command model.Command, contextCommand model.ContextCommand) {
 				s.EXPECT().CreateCommand(command).Return(model.Command{ID: 1,
 					Command: "echo 'Hello, world!' && sleep 10 && echo 'Goodbye, world!'",
-					Result:  ""}, nil)
+					Result:  "",
+					Status:  "In progress"}, nil)
 				s.EXPECT().ExecuteCommand(gomock.Any(), gomock.Any()).Return(model.Command{}, nil)
 			},
 			expectedStatusCode:  http.StatusCreated,
@@ -216,7 +217,8 @@ func TestHandler_CreateCommand(t *testing.T) {
 				s.EXPECT().CreateCommand(command).Return(
 					model.Command{ID: 1,
 						Command: "echo 'Hello, world!' && sleep 10 && echo 'Goodbye, world!'",
-						Result:  ""},
+						Result:  "",
+						Status:  "In progress"},
 					errors.New("element"))
 				s.EXPECT().ExecuteCommand(gomock.Any(), gomock.Any()).Return(model.Command{}, nil)
 			},

@@ -15,7 +15,7 @@ func NewCommandRepository(db *sql.DB) *CommandRepository {
 
 func (cr *CommandRepository) CreateCommand(cmd model.Command) (int, error) {
 	var id int
-	err := cr.conn.QueryRow("INSERT INTO commands (command, result) VALUES ($1, $2) RETURNING id", cmd.Command, cmd.Result).Scan(&id)
+	err := cr.conn.QueryRow("INSERT INTO commands (command, result, status) VALUES ($1, $2, $3) RETURNING id", cmd.Command, cmd.Result, cmd.Status).Scan(&id)
 
 	if err != nil {
 		return 0, err
@@ -23,8 +23,8 @@ func (cr *CommandRepository) CreateCommand(cmd model.Command) (int, error) {
 	return id, nil
 }
 
-func (cr *CommandRepository) UpdateCommand(cmdId int, cmdResult string) error {
-	_, err := cr.conn.Exec("UPDATE commands SET result=$1 WHERE id=$2", cmdResult, cmdId)
+func (cr *CommandRepository) UpdateCommand(cmdId int, cmdResult string, cmdStatus string) error {
+	_, err := cr.conn.Exec("UPDATE commands SET result=$1, status=$3 WHERE id=$2", cmdResult, cmdId, cmdStatus)
 	if err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func (cr *CommandRepository) GetAllCommand() ([]model.Command, error) {
 	var commands []model.Command
 	for rows.Next() {
 		command := model.Command{}
-		err = rows.Scan(&command.ID, &command.Command, &command.Result)
+		err = rows.Scan(&command.ID, &command.Command, &command.Result, &command.Status)
 		if err != nil {
 			return nil, err
 		}
@@ -59,7 +59,7 @@ func (cr *CommandRepository) DeleteCommand(cmdId int) error {
 
 func (cr *CommandRepository) GetCommand(cmdId int) (model.Command, error) {
 	var command model.Command
-	err := cr.conn.QueryRow("SELECT * FROM commands WHERE id=$1", cmdId).Scan(&command.ID, &command.Command, &command.Result)
+	err := cr.conn.QueryRow("SELECT * FROM commands WHERE id=$1", cmdId).Scan(&command.ID, &command.Command, &command.Result, &command.Status)
 	if err != nil {
 		return model.Command{}, err
 	}
