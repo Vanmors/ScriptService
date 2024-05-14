@@ -28,8 +28,7 @@ func (cs *CommandService) CreateCommand(cmd model.Command) (model.Command, error
 	return cmd, nil
 }
 
-func (cs *CommandService) ExecuteCommand(cmd model.Command) (model.Command, error) {
-
+func (cs *CommandService) ExecuteCommand(contextCommand model.ContextCommand, cmd model.Command) (model.Command, error) {
 	command := exec.Command("bash", "-c", cmd.Command)
 	command.Stderr = nil
 
@@ -53,12 +52,17 @@ func (cs *CommandService) ExecuteCommand(cmd model.Command) (model.Command, erro
 		fmt.Println(string(buf[:n]))
 		cmd.Result += string(buf[:n])
 
-		err = cs.Repos.Command.UpdateCommand(cmd.ID, cmd.Result)
-		if err != nil {
+		select {
+		case <-contextCommand.Ctx.Done():
 			return model.Command{}, err
-		}
+		default:
+			err = cs.Repos.Command.UpdateCommand(cmd.ID, cmd.Result)
+			if err != nil {
+				return model.Command{}, err
+			}
 
-		log.Println("updated", cmd.ID)
+			log.Println("updated", cmd.ID)
+		}
 	}
 	return cmd, err
 }
@@ -82,4 +86,13 @@ func (cs *CommandService) GetCommand(cmdId int) (string, error) {
 		return "", err
 	}
 	return command.Command, nil
+}
+
+func (cs *CommandService) CancelCommand(contextCommand model.ContextCommand, cmdId int) error {
+	contextCommand.Cancel()
+	err := cs.Repos.Command.DeleteCommand(cmdId)
+	if err != nil {
+		return err
+	}
+	return nil
 }

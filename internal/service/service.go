@@ -8,8 +8,9 @@ import (
 type Command interface {
 	CreateCommand(cmd model.Command) (model.Command, error)
 	GetAllCommands() ([]string, error)
-	ExecuteCommand(cmd model.Command) (model.Command, error)
+	ExecuteCommand(contextCommand model.ContextCommand, cmd model.Command) (model.Command, error)
 	GetCommand(cmdId int) (string, error)
+	CancelCommand(contextCommand model.ContextCommand, cmdId int) error
 }
 
 type Services struct {

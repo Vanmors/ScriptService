@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/viper"
 	"log"
 	"net/http"
-	"os"
 )
 
 func Run() error {
@@ -37,11 +36,10 @@ func Run() error {
 	http.HandleFunc("/command", handler.CreateCommand)
 	http.HandleFunc("/commands", handler.GetAllCommands)
 	http.HandleFunc("/command/", handler.GetCommandById)
+	http.HandleFunc("/cancelCommand/", handler.CancelCommand)
 
-	port = os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
+	port = viper.GetString("port")
 	log.Printf("Сервер запущен на порту %s", port)
+
 	return http.ListenAndServe(":"+port, nil)
 }
